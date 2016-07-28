@@ -2,18 +2,16 @@
 # Dockerfile to build epub conversion Image
 # Based on Ubuntu 14:04
 ############################################################ 
-
 FROM ubuntu:14.04
 
 #Java Insatallation
 #====================
-RUN apt-get update && apt-get install -y openjdk-7-jdk
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y software-properties-common python-software-properties build-essential git-core curl zlib1g-dev libmagickcore-dev libmagickwand-dev libssl-dev libreadline-dev libyaml-dev libxml2-dev libxslt1-dev libcurl4-openssl-dev libffi-dev libxml-parser-perl
+RUN apt-get install -y openjdk-7-jdk && rm -rf /var/lib/apt/lists/*
 
 #Perl Installation
 #===================
-RUN apt-get update && apt-get install -y build-essential perl cpanminus libxml-parser-perl
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y  perl cpanminus && rm -rf /var/lib/apt/lists/*
 RUN cpanm CPAN::Meta \
  Archive::Zip \
  Array::Utils \ 
@@ -27,6 +25,7 @@ RUN cpanm CPAN::Meta \
  File::NCopy \
  File::Find  \
  File::Basename \
+ File::Copy::Recursive \
  File::Find::Rule \
  Getopt::Long \
  Image::ExifTool \
@@ -41,24 +40,13 @@ RUN cpanm CPAN::Meta \
  XML::XPath::XMLParser \
  YAML \
  ExtUtils::MakeMaker
-
-
+ 
 RUN cpanm --force Net::RabbitMQ
-
-#ImageMagick Installation
-#=======================
-RUN apt-get update && apt-get install -y imagemagick
-RUN rm -rf /var/lib/apt/lists/*
-
 
 #Ruby Installation
 #===================
-RUN apt-get update && apt-get install -y software-properties-common python-software-properties
 RUN add-apt-repository ppa:brightbox/ruby-ng
-RUN apt-get update && apt-get install -y ruby2.2 ruby2.2-dev ruby-bundler
-RUN apt-get update && apt-get install -y git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev
-RUN apt-get update && apt-get -y install imagemagick libmagickcore-dev libmagickwand-dev
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ruby2.2 ruby2.2-dev ruby-bundler && rm -rf /var/lib/apt/lists/*
 RUN gem install bundler \
  fileutils \
  nokogiri \
@@ -66,25 +54,14 @@ RUN gem install bundler \
  rmagick \
  rubyzip \
  rubyzip2 \
- tdiff
+ tdiff \
+&& rm -rf /var/lib/apt/lists/*
 
+#ImageMagic wkhtmltopdf Install
+#=====================
+RUN add-apt-repository -y ppa:ubuntu-wine/ppa
+RUN add-apt-repository -y ppa:ecometrica/servers
+RUN apt-get update && apt-get install -y  imagemagick wkhtmltopdf xvfb 
+RUN apt-get -f install
 RUN rm -rf /var/lib/apt/lists/*
 
-#Win Installation
-#=============
-RUN dpkg --add-architecture i386
-RUN apt-get update -y && apt-get install -y software-properties-common
-RUN add-apt-repository -y ppa:ubuntu-wine/ppa
-RUN apt-get update -y && apt-get install -y wine1.7 winetricks xvfb
-RUN apt-get purge -y software-properties-common
-RUN apt-get autoclean -y
-
-#Install RabbitMQ
-#============
-#RUN wget -O- https://www.rabbitmq.com/rabbitmq-release-signing-key.asc | apt-key add -
-#RUN apt-get update && apt-get install rabbitmq-server
-#RUN rabbitmq-plugins enable rabbitmq_management
-#ADD /usr/bin/rabbitmq-start /usr/local/bin/
-#CMD ["rabbitmq-start"]
-#EXPOSE 5672
-#EXPOSE 15672
